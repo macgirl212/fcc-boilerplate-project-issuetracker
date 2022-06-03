@@ -80,6 +80,7 @@ module.exports = function (app) {
 				return res.json({ error: 'required field(s) missing' });
 			}
 
+			// try to create issue
 			Issue.create(
 				{
 					issue_title: req.body.issue_title,
@@ -101,10 +102,55 @@ module.exports = function (app) {
 		})
 
 		.put(function (req, res) {
-			let project = req.params.project;
+			// check if there's no id
+			if (!req.body._id) {
+				return res.json({ error: 'missing _id' });
+			}
+
+			// create a query object to hold all possible fields
+			const queryObject = {};
+			for (const field in req.body) {
+				if (req.body[field] !== '' && field !== '_id') {
+					queryObject[field] = req.body[field];
+				}
+			}
+
+			// check if any fields were added
+			if (Object.keys(queryObject).length === 0) {
+				return res.json({
+					error: 'no update field(s) sent',
+					_id: req.body._id,
+				});
+			}
+
+			// add extra fields to queryObject
+			queryObject.updated_on = new Date().toUTCString();
+
+			// try to find and update issue
+			Issue.findByIdAndUpdate(req.body._id, queryObject, (err, issue) => {
+				if (!issue) {
+					return res.json({ error: 'could not update', _id: req.body._id });
+				}
+				if (!err && issue) {
+					res.json({ result: 'successfully updated', _id: req.body._id });
+				}
+			});
 		})
 
 		.delete(function (req, res) {
-			let project = req.params.project;
+			// check if there's no id
+			if (!req.body._id) {
+				return res.json({ error: 'missing _id' });
+			}
+
+			// try to find and delete issue
+			Issue.findByIdAndRemove(req.body._id, (err, issue) => {
+				if (!issue) {
+					return res.json({ error: 'could not delete', _id: req.body._id });
+				}
+				if (!err && issue) {
+					res.json({ result: 'successfully deleted', _id: req.body._id });
+				}
+			});
 		});
 };
