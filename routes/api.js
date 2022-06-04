@@ -7,9 +7,9 @@ let issueSchema = new mongoose.Schema({
 	created_by: { type: String, required: true },
 	assigned_to: String,
 	status_text: String,
-	open: { type: Boolean, required: true },
-	created_on: { type: Date, required: true },
-	updated_on: { type: Date, required: true },
+	open: { type: Boolean, default: true },
+	created_on: Date,
+	updated_on: Date,
 	project: String,
 });
 
@@ -102,6 +102,9 @@ module.exports = function (app) {
 		})
 
 		.put(function (req, res) {
+			const goodMessage = {
+				result: 'successfully updated',
+			};
 			// check if there's no id
 			if (!req.body._id) {
 				return res.json({ error: 'missing _id' });
@@ -132,7 +135,7 @@ module.exports = function (app) {
 					return res.json({ error: 'could not update', _id: req.body._id });
 				}
 				if (!err && issue) {
-					res.json({ result: 'successfully updated', _id: req.body._id });
+					return res.json({ result: 'successfully updated', _id: issue._id });
 				}
 			});
 		})
