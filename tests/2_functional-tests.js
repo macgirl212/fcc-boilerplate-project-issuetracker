@@ -6,7 +6,8 @@ const server = require('../server');
 chai.use(chaiHttp);
 
 suite('Functional Tests', function () {
-	let updateId;
+	let tempId;
+	const fakeId = 314159;
 	test('Create issue with every field filled', (done) => {
 		chai
 			.request(server)
@@ -41,7 +42,7 @@ suite('Functional Tests', function () {
 				status_text: '',
 			})
 			.end((err, res) => {
-				updateId = res.body._id;
+				tempId = res.body._id;
 				assert.equal(res.status, 201);
 				assert.equal(res.body.issue_title, 'Page crashed');
 				assert.equal(res.body.issue_text, 'Page crashed when I try to login');
@@ -50,7 +51,7 @@ suite('Functional Tests', function () {
 				assert.equal(res.body.status_text, '');
 				assert.equal(res.body.project, 'test');
 				done();
-				return updateId;
+				return tempId;
 			});
 	});
 	test('Create issue with missing required fields', (done) => {
@@ -70,7 +71,7 @@ suite('Functional Tests', function () {
 				done();
 			});
 	});
-	test('View all issues on a project', (done) => {
+	test('View all issues of project', (done) => {
 		chai
 			.request(server)
 			.get('/api/issues/test')
@@ -90,7 +91,7 @@ suite('Functional Tests', function () {
 				done();
 			});
 	});
-	test('View all issues on a project with one filter', (done) => {
+	test('View all issues of project with one filter', (done) => {
 		chai
 			.request(server)
 			.get('/api/issues/test')
@@ -111,7 +112,7 @@ suite('Functional Tests', function () {
 				done();
 			});
 	});
-	test('View all issues on a project with multiple filters', (done) => {
+	test('View all issues of project with multiple filters', (done) => {
 		chai
 			.request(server)
 			.get('/api/issues/test')
@@ -138,37 +139,120 @@ suite('Functional Tests', function () {
 				done();
 			});
 	});
-	test('Update one field on an issue', (done) => {
+	test('Update one field of issue', (done) => {
 		chai
 			.request(server)
 			.put('/api/issues/test')
 			.send({
-				_id: updateId,
+				_id: tempId,
 				issue_text: 'Page crashed when I try to logout',
 			})
 			.end((err, res) => {
 				assert.equal(res.status, 200);
 				assert.equal(res.body.result, 'successfully updated');
-				assert.equal(res.body._id, updateId);
+				assert.equal(res.body._id, tempId);
 				done();
 			});
 	});
-	test('Update multiple fields on an issue', (done) => {
+	test('Update multiple fields of issue', (done) => {
 		chai
 			.request(server)
 			.put('/api/issues/test')
 			.send({
-				_id: updateId,
+				_id: tempId,
 				issue_text: 'Everything crashes',
 				issue_text: 'Page crashed when I clicked',
 				created_by: 'Coco',
-				assigned_to: 'Front-end development department',
+				assigned_to: 'Everyone at this point',
 				status_text: 'Not yet in progress',
 			})
 			.end((err, res) => {
 				assert.equal(res.status, 200);
 				assert.equal(res.body.result, 'successfully updated');
-				assert.equal(res.body._id, updateId);
+				assert.equal(res.body._id, tempId);
+				done();
+			});
+	});
+	test('Update issue with no _id', (done) => {
+		chai
+			.request(server)
+			.put('/api/issues/test')
+			.send({
+				issue_text: 'Only boxes crash when clicked',
+				created_by: 'Tawna',
+				status_text: 'Almost in progress',
+			})
+			.end((err, res) => {
+				assert.equal(res.status, 200);
+				assert.equal(res.body.error, 'missing _id');
+				done();
+			});
+	});
+	test('Update issue with no fields filled', (done) => {
+		chai
+			.request(server)
+			.put('/api/issues/test')
+			.send({
+				_id: tempId,
+			})
+			.end((err, res) => {
+				assert.equal(res.status, 200);
+				assert.equal(res.body.error, 'no update field(s) sent');
+				assert.equal(res.body._id, tempId);
+				done();
+			});
+	});
+	test('Update issue with invalid _id', (done) => {
+		chai
+			.request(server)
+			.put('/api/issues/test')
+			.send({
+				_id: fakeId,
+				issue_text: 'CSS circles',
+				created_by: 'The Professor',
+			})
+			.end((err, res) => {
+				assert.equal(res.status, 200);
+				assert.equal(res.body.error, 'could not update');
+				assert.equal(res.body._id, fakeId);
+				done();
+			});
+	});
+	test('Delete issue with missing _id', (done) => {
+		chai
+			.request(server)
+			.delete('/api/issues/test')
+			.end((err, res) => {
+				assert.equal(res.status, 200);
+				assert.equal(res.body.error, 'missing _id');
+				done();
+			});
+	});
+	test('Delete issue with invalid _id', (done) => {
+		chai
+			.request(server)
+			.delete('/api/issues/test')
+			.send({
+				_id: fakeId,
+			})
+			.end((err, res) => {
+				assert.equal(res.status, 200);
+				assert.equal(res.body.error, 'could not delete');
+				assert.equal(res.body._id, fakeId);
+				done();
+			});
+	});
+	test('Delete issue', (done) => {
+		chai
+			.request(server)
+			.delete('/api/issues/test')
+			.send({
+				_id: tempId,
+			})
+			.end((err, res) => {
+				assert.equal(res.status, 200);
+				assert.equal(res.body.result, 'successfully deleted');
+				assert.equal(res.body._id, tempId);
 				done();
 			});
 	});

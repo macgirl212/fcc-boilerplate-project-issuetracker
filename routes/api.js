@@ -152,7 +152,10 @@ module.exports = function (app) {
 					return res.json({ error: 'could not delete', _id: req.body._id });
 				}
 				if (!err && issue) {
-					res.json({ result: 'successfully deleted', _id: req.body._id });
+					return res.json({
+						result: 'successfully deleted',
+						_id: req.body._id,
+					});
 				}
 			});
 		});
