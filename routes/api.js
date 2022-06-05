@@ -21,45 +21,16 @@ module.exports = function (app) {
 
 		.get(function (req, res) {
 			let project = req.params.project;
-			// get all possible queries
-			let {
-				issue_title,
-				issue_text,
-				created_by,
-				assigned_to,
-				status_text,
-				open,
-				created_on,
-				updated_on,
-			} = req.query;
 
 			const queryObject = {};
 
 			// add all available queries to the query object
 			queryObject.project = project;
-			if (issue_title) {
-				queryObject.issue_title = issue_title;
-			}
-			if (issue_text) {
-				queryObject.issue_text = issue_text;
-			}
-			if (created_by) {
-				queryObject.created_by = created_by;
-			}
-			if (assigned_to) {
-				queryObject.assigned_to = assigned_to;
-			}
-			if (status_text) {
-				queryObject.status_text = status_text;
-			}
-			if (open) {
-				queryObject.open = open;
-			}
-			if (created_on) {
-				queryObject.created_on = created_on;
-			}
-			if (updated_on) {
-				queryObject.updated_on = updated_on;
+
+			for (const field in req.query) {
+				if (req.query[field] !== '') {
+					queryObject[field] = req.query[field];
+				}
 			}
 
 			Issue.find(queryObject, (err, issues) => {
@@ -102,9 +73,6 @@ module.exports = function (app) {
 		})
 
 		.put(function (req, res) {
-			const goodMessage = {
-				result: 'successfully updated',
-			};
 			// check if there's no id
 			if (!req.body._id) {
 				return res.json({ error: 'missing _id' });
